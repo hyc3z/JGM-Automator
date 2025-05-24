@@ -1,4 +1,7 @@
 # JGM-Automator
+
+文艺复兴了，重拾adb 安卓自动化，拿这个脚本练手
+
 **NoneType报错的临时解决方案是换用openCV3.x版本，如果你不会更换，请执行**
 ```
   python -m pip install opencv-python==3.* -i https://pypi.tuna.tsinghua.edu.cn/simple/

@@ -1,6 +1,8 @@
 
-import imutils,cv2,numpy as np
+import cv2
+import numpy as np
 from util import *
+import matplotlib.pyplot as plt
 
 class UIMatcher:
 
@@ -28,7 +30,7 @@ class UIMatcher:
             # plt.show()
             # 找轮廓
             cnts = cv2.findContours(img2, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-            cnts = cnts[1] if imutils.is_cv3() else cnts[0]
+            cnts = cnts[0]
             if len(cnts):
                 for c in cnts:
                     # 获取中心点
@@ -68,13 +70,13 @@ class UIMatcher:
         img2 = cv2.GaussianBlur(img2, (5, 5), 0)
         # 找轮廓
         cnts = cv2.findContours(img2, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-        if len(cnts[1]):
+        if len(cnts[0]):
             return True
         else:
             return False
 
     @staticmethod
-    def findGreenLight(diff_screens, th=100):
+    def findGreenLight(diff_screens, th=60):
         screen_before, screen_after = diff_screens
         # 转换成有符号数以处理相减后的负值
         screen_before = screen_before.astype(np.int16)
@@ -113,9 +115,6 @@ class UIMatcher:
         for good_id in CROSS_POSITIONS.keys():
             square = UIMatcher.getLittleSquare(screen,CROSS_POSITIONS[good_id])
             ret, W = cv2.threshold(square, 250, 255, cv2.THRESH_BINARY)
-            # import matplotlib.pyplot as plt
-            # plt.imshow(W,cmap='gray')
-            # plt.show()
             # 二值化后求平均值
             if np.mean(W) > th:
                 good_id_list.append(good_id)
@@ -157,7 +156,7 @@ class UIMatcher:
             img2 = dst1&dst2&dst3 # 相与
 
             cnts = cv2.findContours(img2, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
-            cnts = cnts[1] if imutils.is_cv3() else cnts[0]
+            cnts = cnts[0]
             dstPoints = []
             if len(cnts):
                 for c in cnts:

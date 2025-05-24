@@ -5,13 +5,12 @@ import random
 import logging
 
 class Automator:
-    def __init__(self, device: str, upgrade_list: list, harvest_filter:list, auto_task = False, auto_policy = True, auto_goods = False, speedup = True, auto_red_bag=["small", "middle", "photo"]):
+    def __init__(self, device: str, upgrade_list: list, auto_task = False, auto_policy = True, auto_goods = True, speedup = True, auto_red_bag=["small", "middle", "photo"]):
         """
         device: 如果是 USB 连接，则为 adb devices 的返回结果；如果是模拟器，则为模拟器的控制 URL 。
         """
         self.d = u2.connect(device)
         self.upgrade_list = upgrade_list
-        self.harvest_filter = harvest_filter
         self.dWidth, self.dHeight = self.d.window_size()
         logging.info(f'device screen size {self.dWidth}, {self.dHeight}')
         self.appRunning = False
@@ -76,7 +75,7 @@ class Automator:
             # 用户在操作手机，暂停10秒
             time.sleep(10)
 
-    def harvest(self,building_filter,goods:list):
+    def harvest(self, goods:list):
         '''
         新的傻瓜搬货物方法,先按住截图判断绿光探测货物目的地,再搬
         '''
@@ -84,7 +83,7 @@ class Automator:
         for good in goods:
             pos_id = self.guess_good(good)
             logging.info(pos_id)
-            if pos_id != 0 and pos_id in building_filter:
+            if pos_id != 0:
                 # 搬5次
                 self._move_good_by_id(good, BUILDING_POSITIONS[pos_id], times=4)
                 short_wait()
@@ -101,7 +100,7 @@ class Automator:
         '''
         Get screenshot with screen touched.
         '''
-        screen_before = self.d.screenshot(format="opencv")
+        screen_before = self.d.screenshot(format="opencv", display_id=1)
         h,w = len(screen_before),len(screen_before[0])
         x,y = (location[0] * w,location[1] *h)
         # 按下
@@ -109,7 +108,7 @@ class Automator:
         # logging.info('[%s]Tapped'%time.asctime())
         time.sleep(pressed_time)
         # 截图
-        screen = self.d.screenshot(format="opencv")
+        screen = self.d.screenshot(format="opencv", display_id=1)
         # logging.info('[%s]Screenning'%time.asctime())
         # 松开
         self.d.touch.up(x,y)
@@ -120,7 +119,7 @@ class Automator:
         if not self.auto_policy:
             return
         # 看看政策中心那里有没有冒绿色箭头气泡
-        if len(UIMatcher.findGreenArrow(self.d.screenshot(format="opencv"))):
+        if len(UIMatcher.findGreenArrow(self.d.screenshot(format="opencv", display_id=1))):
             # 打开政策中心
             self.d.click(0.206, 0.097)
             mid_wait()
@@ -130,7 +129,7 @@ class Automator:
             self._slide_to_top()
             # 开始找绿色箭头,找不到就往下滑,最多划5次
             for i in range(5):
-                screen = self.d.screenshot(format="opencv")
+                screen = self.d.screenshot(format="opencv", display_id=1)
                 arrows = UIMatcher.findGreenArrow(screen)
                 if len(arrows):
                     x,y = arrows[0]
@@ -149,7 +148,7 @@ class Automator:
         if not self.auto_task:
             return
         # 看看任务中心有没有冒黄色气泡
-        screen = self.d.screenshot(format="opencv")
+        screen = self.d.screenshot(format="opencv", display_id=1)
         if UIMatcher.findTaskBubble(screen):
             self.d.click(0.16, 0.84) # 打开城市任务
             short_wait()
@@ -164,7 +163,7 @@ class Automator:
         good_id = self._has_good()
         if len(good_id) > 0:
             logging.info("[%s] Train come."%time.asctime())
-            self.harvest(self.harvest_filter, good_id)
+            self.harvest(good_id)
         else:
             # logging.info("[%s] No goods! Pls wait 2s."%time.asctime())
             self.swipe()
@@ -185,7 +184,7 @@ class Automator:
             return
         self.d.click(0.5, 0.95)
         mid_wait()
-        screen = self.d.screenshot(format="opencv")
+        screen = self.d.screenshot(format="opencv", display_id=1)
         points = UIMatcher.findRedBagOpen(screen)
         for point in points:
             for key, value in REDBAG_PHOTO_POSTION.items():
@@ -209,14 +208,14 @@ class Automator:
         return False
 
     def _open_upgrade_interface(self):
-        screen = self.d.screenshot(format="opencv")
+        screen = self.d.screenshot(format="opencv", display_id=1)
         # 判断升级按钮的颜色，蓝比红多就处于正常界面，反之在升级界面
         R, G, B = UIMatcher.getPixel(screen,0.974,0.615)
         if B > R:
             self.d.click(0.9, 0.57)
 
     def _close_upgrade_interface(self):
-        screen = self.d.screenshot(format="opencv")
+        screen = self.d.screenshot(format="opencv", display_id=1)
         # 判断升级按钮的颜色，蓝比红多就处于正常界面，反之在升级界面
         R, G, B = UIMatcher.getPixel(screen,0.974,0.615)
         if B < R:
@@ -244,7 +243,7 @@ class Automator:
         '''
         返回有货的位置列表
         '''
-        screen = self.d.screenshot(format="opencv")  
+        screen = self.d.screenshot(format="opencv", display_id=1)  
         return UIMatcher.detectCross(screen)
 
     def _slide_to_top(self):
