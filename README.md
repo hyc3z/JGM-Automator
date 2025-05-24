@@ -47,14 +47,6 @@
   adb devices
   ```
 
-- 在已完成 adb 连接后，在手机安装 ATX 应用。
-
-  ```bash
-  python -m uiautomator2 init
-  ```
-
-- 在手机上打开 ATX ，点击 `启动 UIAutomator` 选项，确保 UIAutomator 是运行的。如果是 MuMu 模拟器，长时间不运行的话，再次运行前也需要重新打开ATX(小黄车)。
-
 + 如何运行这个脚本:
 
   ```bash
